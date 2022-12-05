@@ -9,6 +9,8 @@ import com.atguigu.educenter.service.UcenterMemberService;
 import com.atguigu.servicebase.exceptionhandler.GuliException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,10 @@ import org.springframework.util.StringUtils;
 public class UcenterMemberServiceImpl extends ServiceImpl<UcenterMemberMapper, UcenterMember> implements UcenterMemberService {
     @Autowired
     private RedisTemplate<String,String> redisTemplate;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    String msg = "aaa";
+    String queueName = "order.queue";
     @Override
     public String login(UcenterMember member) {
         //获取登录手机号和密码
@@ -56,7 +62,9 @@ public class UcenterMemberServiceImpl extends ServiceImpl<UcenterMemberMapper, U
         //登录成功
         //生成token字符串，用JWT工具类
         String jwtToken = JwtUtils.getJwtToken(mobileMember.getId(), mobileMember.getNickname());
+        rabbitTemplate.convertAndSend(queueName,msg);
         return jwtToken;
+
     }
     //注册
     @Override
